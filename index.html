@@ -23,15 +23,15 @@
       }
 
       body {
-        min-height: 100svh;
+        min-height: 100dvh;
         display: flex;
         flex-direction: column;
         align-items: center;
         padding:
-          max(16px, env(safe-area-inset-top))
-          max(16px, env(safe-area-inset-right))
-          max(96px, calc(env(safe-area-inset-bottom) + 96px))
-          max(16px, env(safe-area-inset-left));
+          max(8px, env(safe-area-inset-top))
+          max(8px, env(safe-area-inset-right))
+          max(8px, env(safe-area-inset-bottom))
+          max(8px, env(safe-area-inset-left));
         overflow-x: hidden;
         overflow-y: auto;
         background:
@@ -43,10 +43,11 @@
 
       main {
         display: grid;
-        gap: 12px;
+        gap: 8px;
         width: 100%;
         max-width: 560px;
-        margin: auto 0;
+        min-height: calc(100dvh - env(safe-area-inset-top) - env(safe-area-inset-bottom) - 16px);
+        align-content: center;
         justify-items: center;
       }
 
@@ -65,7 +66,7 @@
       p {
         margin: 0;
         text-align: center;
-        font-size: 14px;
+        font-size: 12px;
         line-height: 1.5;
         color: rgba(228, 239, 255, 0.82);
       }
@@ -82,10 +83,10 @@
         appearance: none;
         border: 0;
         border-radius: 16px;
-        padding: 16px 0;
+        padding: 12px 0;
         background: linear-gradient(180deg, #7cc7ff 0%, #3e88c7 100%);
         color: #04111d;
-        font: 700 24px/1 "Trebuchet MS", "Hiragino Sans", sans-serif;
+        font: 700 20px/1 "Trebuchet MS", "Hiragino Sans", sans-serif;
         box-shadow:
           inset 0 1px 0 rgba(255, 255, 255, 0.35),
           0 10px 24px rgba(0, 0, 0, 0.28);
@@ -96,6 +97,40 @@
       .touch-button.is-active {
         transform: translateY(1px);
         background: linear-gradient(180deg, #ffd36a 0%, #f4a317 100%);
+      }
+
+      @media (max-height: 760px) {
+        body {
+          padding:
+            max(6px, env(safe-area-inset-top))
+            max(6px, env(safe-area-inset-right))
+            max(6px, env(safe-area-inset-bottom))
+            max(6px, env(safe-area-inset-left));
+        }
+
+        main {
+          gap: 6px;
+        }
+
+        .touch-controls {
+          gap: 8px;
+        }
+
+        .touch-button {
+          padding: 10px 0;
+          font-size: 18px;
+        }
+
+        p {
+          font-size: 11px;
+          line-height: 1.35;
+        }
+      }
+
+      @media (max-height: 680px) {
+        p {
+          display: none;
+        }
       }
     </style>
     <script src="https://cdn.jsdelivr.net/gh/kitao/pyxel/wasm/pyxel.js"></script>
@@ -126,16 +161,19 @@
 
         const bodyStyle = getComputedStyle(document.body);
         const mainStyle = getComputedStyle(main);
+        const viewportWidth = window.visualViewport?.width ?? window.innerWidth;
+        const viewportHeight = window.visualViewport?.height ?? window.innerHeight;
         const horizontalPadding =
           parseFloat(bodyStyle.paddingLeft) + parseFloat(bodyStyle.paddingRight);
         const verticalPadding =
           parseFloat(bodyStyle.paddingTop) + parseFloat(bodyStyle.paddingBottom);
         const gap = parseFloat(mainStyle.gap) || 0;
         const controlsHeight = controls.getBoundingClientRect().height;
-        const hintHeight = hint.getBoundingClientRect().height;
-        const availableWidth = Math.min(560, window.innerWidth - horizontalPadding);
+        const hintVisible = getComputedStyle(hint).display !== "none";
+        const hintHeight = hintVisible ? hint.getBoundingClientRect().height : 0;
+        const availableWidth = Math.min(560, viewportWidth - horizontalPadding);
         const availableHeight =
-          window.innerHeight - verticalPadding - controlsHeight - hintHeight - gap * 2 - 12;
+          viewportHeight - verticalPadding - controlsHeight - hintHeight - gap * 2 - 4;
         const fittedWidth = Math.min(availableWidth, (availableHeight * GAME_WIDTH) / GAME_HEIGHT);
         const targetWidth = Math.max(180, Math.min(availableWidth, Math.floor(fittedWidth)));
 
@@ -174,6 +212,7 @@
 
       window.addEventListener("resize", resizeGameLayout);
       window.addEventListener("orientationchange", resizeGameLayout);
+      window.visualViewport?.addEventListener("resize", resizeGameLayout);
       resizeGameLayout();
 
       const pressedKeys = new Map();
