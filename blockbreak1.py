@@ -6,6 +6,9 @@ import pyxel
 
 WIDTH = 160
 HEIGHT = 120
+HUD_HEIGHT = 10
+CONTROL_AREA_HEIGHT = 22
+PLAY_BOTTOM = HEIGHT - CONTROL_AREA_HEIGHT
 PADDLE_WIDTH = 26
 PADDLE_HEIGHT = 4
 BALL_RADIUS = 2
@@ -22,6 +25,13 @@ BRICK_HEIGHT = 6
 BRICK_GAP = 2
 BRICK_OFFSET_X = 8
 BRICK_OFFSET_Y = 18
+CONTROL_BUTTON_TOP = PLAY_BOTTOM + 4
+CONTROL_BUTTON_HEIGHT = 14
+CONTROL_BUTTON_GAP = 8
+CONTROL_BUTTON_MARGIN = 8
+CONTROL_BUTTON_WIDTH = (WIDTH - CONTROL_BUTTON_MARGIN * 2 - CONTROL_BUTTON_GAP) // 2
+LEFT_BUTTON_X = CONTROL_BUTTON_MARGIN
+RIGHT_BUTTON_X = LEFT_BUTTON_X + CONTROL_BUTTON_WIDTH + CONTROL_BUTTON_GAP
 STATE_TITLE = "title"
 STATE_PLAYING = "playing"
 STATE_CLEAR = "clear"
@@ -67,10 +77,10 @@ class App:
         self.score = 0
         self.lives = INITIAL_LIVES
         self.state = STATE_TITLE
-        self.paddle = Paddle(x=WIDTH / 2 - PADDLE_WIDTH / 2, y=HEIGHT - 12)
+        self.paddle = Paddle(x=WIDTH / 2 - PADDLE_WIDTH / 2, y=PLAY_BOTTOM - 8)
         self.ball = Ball(
             x=WIDTH / 2,
-            y=HEIGHT - 18,
+            y=PLAY_BOTTOM - 14,
             vx=BALL_START_SPEED_X,
             vy=BALL_START_SPEED_Y,
         )
@@ -88,7 +98,7 @@ class App:
     def reset_round(self) -> None:
         self.paddle.x = WIDTH / 2 - self.paddle.width / 2
         self.ball.x = WIDTH / 2
-        self.ball.y = HEIGHT - 18
+        self.ball.y = PLAY_BOTTOM - 14
         direction = -1 if pyxel.rndi(0, 1) == 0 else 1
         self.ball.vx = BALL_START_SPEED_X * direction
         self.ball.vy = BALL_START_SPEED_Y
@@ -147,19 +157,39 @@ class App:
                 star[2] = pyxel.rndi(1, 2)
 
     def update_paddle(self) -> None:
-        pointer_down = pyxel.btn(pyxel.MOUSE_BUTTON_LEFT)
-        pointer_in_bounds = 0 <= pyxel.mouse_x < WIDTH and 10 <= pyxel.mouse_y < HEIGHT
-        move_left = pyxel.btn(pyxel.KEY_LEFT) or pyxel.btn(pyxel.KEY_A)
-        move_right = pyxel.btn(pyxel.KEY_RIGHT) or pyxel.btn(pyxel.KEY_D)
+        move_left, move_right = self.get_paddle_input()
 
-        if pointer_down and pointer_in_bounds:
-            self.paddle.x = pyxel.mouse_x - self.paddle.width / 2
-        elif move_left:
+        if move_left:
             self.paddle.x -= self.paddle.speed
         elif move_right:
             self.paddle.x += self.paddle.speed
 
         self.paddle.x = max(4, min(self.paddle.x, WIDTH - self.paddle.width - 4))
+
+    def get_paddle_input(self) -> tuple[bool, bool]:
+        pointer_down = pyxel.btn(pyxel.MOUSE_BUTTON_LEFT)
+        pointer_in_playfield = 0 <= pyxel.mouse_x < WIDTH and HUD_HEIGHT <= pyxel.mouse_y < PLAY_BOTTOM
+        move_left = pyxel.btn(pyxel.KEY_LEFT) or pyxel.btn(pyxel.KEY_A)
+        move_right = pyxel.btn(pyxel.KEY_RIGHT) or pyxel.btn(pyxel.KEY_D)
+
+        if pointer_down and self.pointer_on_button(LEFT_BUTTON_X):
+            move_left = True
+            move_right = False
+        elif pointer_down and self.pointer_on_button(RIGHT_BUTTON_X):
+            move_left = False
+            move_right = True
+        elif pointer_down and pointer_in_playfield:
+            self.paddle.x = pyxel.mouse_x - self.paddle.width / 2
+            move_left = False
+            move_right = False
+
+        return move_left, move_right
+
+    def pointer_on_button(self, button_x: int) -> bool:
+        return (
+            button_x <= pyxel.mouse_x < button_x + CONTROL_BUTTON_WIDTH
+            and CONTROL_BUTTON_TOP <= pyxel.mouse_y < CONTROL_BUTTON_TOP + CONTROL_BUTTON_HEIGHT
+        )
 
     def update_ball(self) -> None:
         previous_x = self.ball.x
@@ -174,11 +204,11 @@ class App:
             self.ball.x = WIDTH - self.ball.radius
             self.ball.vx *= -1
 
-        if self.ball.y <= 10 + self.ball.radius:
-            self.ball.y = 10 + self.ball.radius
+        if self.ball.y <= HUD_HEIGHT + self.ball.radius:
+            self.ball.y = HUD_HEIGHT + self.ball.radius
             self.ball.vy *= -1
 
-        if self.ball.y >= HEIGHT + self.ball.radius:
+        if self.ball.y >= PLAY_BOTTOM + self.ball.radius:
             self.lives -= 1
             if self.lives <= 0:
                 self.state = STATE_GAME_OVER
@@ -250,6 +280,7 @@ class App:
         self.draw_bricks()
         self.draw_paddle()
         self.draw_ball()
+        self.draw_controls()
 
         if self.state == STATE_TITLE:
             self.draw_overlay("BLOCK BREAKER", "SPACE TO START")
@@ -264,8 +295,9 @@ class App:
             pyxel.pset(int(x), int(y), color)
 
     def draw_frame(self) -> None:
-        pyxel.rectb(0, 10, WIDTH, HEIGHT - 10, 13)
-        pyxel.line(0, 10, WIDTH, 10, 13)
+        pyxel.rectb(0, HUD_HEIGHT, WIDTH, PLAY_BOTTOM - HUD_HEIGHT, 13)
+        pyxel.line(0, HUD_HEIGHT, WIDTH, HUD_HEIGHT, 13)
+        pyxel.line(0, PLAY_BOTTOM, WIDTH, PLAY_BOTTOM, 13)
 
     def draw_hud(self) -> None:
         pyxel.text(6, 3, f"SCORE {self.score:04d}", 7)
@@ -284,6 +316,19 @@ class App:
     def draw_ball(self) -> None:
         pyxel.circ(int(self.ball.x), int(self.ball.y), self.ball.radius, 10)
 
+    def draw_controls(self) -> None:
+        left_active = pyxel.btn(pyxel.MOUSE_BUTTON_LEFT) and self.pointer_on_button(LEFT_BUTTON_X)
+        right_active = pyxel.btn(pyxel.MOUSE_BUTTON_LEFT) and self.pointer_on_button(RIGHT_BUTTON_X)
+        self.draw_control_button(LEFT_BUTTON_X, left_active, "<")
+        self.draw_control_button(RIGHT_BUTTON_X, right_active, ">")
+
+    def draw_control_button(self, x: int, active: bool, label: str) -> None:
+        fill_color = 6 if active else 5
+        text_color = 1 if active else 0
+        pyxel.rect(x, CONTROL_BUTTON_TOP, CONTROL_BUTTON_WIDTH, CONTROL_BUTTON_HEIGHT, fill_color)
+        pyxel.rectb(x, CONTROL_BUTTON_TOP, CONTROL_BUTTON_WIDTH, CONTROL_BUTTON_HEIGHT, 7)
+        pyxel.text(x + CONTROL_BUTTON_WIDTH // 2 - 2, CONTROL_BUTTON_TOP + 4, label, text_color)
+
     def draw_overlay(self, title: str, subtitle: str) -> None:
         pyxel.rect(24, 42, 112, 34, 0)
         pyxel.rectb(24, 42, 112, 34, 7)
@@ -292,7 +337,7 @@ class App:
         pyxel.text(title_x, 50, title, 8)
         pyxel.text(subtitle_x, 62, subtitle, 7)
         if self.state == STATE_TITLE:
-            pyxel.text(34, 84, "MOVE: DRAG OR A/D", 6)
+            pyxel.text(22, 84, "MOVE: BUTTONS OR DRAG", 6)
             pyxel.text(32, 92, "START: TAP OR SPACE", 6)
 
 
