@@ -44,14 +44,16 @@
       main {
         display: grid;
         gap: 12px;
-        width: min(100%, 560px);
+        width: 100%;
+        max-width: 560px;
         margin: auto 0;
         justify-items: center;
       }
 
       pyxel-run {
         display: block;
-        width: min(100%, 560px);
+        width: 100%;
+        max-width: 560px;
         line-height: 0;
         border: 2px solid rgba(228, 239, 255, 0.18);
         border-radius: 18px;
@@ -72,9 +74,8 @@
         display: grid;
         grid-template-columns: repeat(2, minmax(0, 1fr));
         gap: 12px;
-        width: min(100%, 560px);
-        position: sticky;
-        bottom: max(16px, env(safe-area-inset-bottom));
+        width: 100%;
+        max-width: 560px;
       }
 
       .touch-button {
@@ -109,6 +110,44 @@
       <p>スマホは画面下の左右ボタンかドラッグで移動、タップで開始・リトライできます。</p>
     </main>
     <script>
+      const GAME_WIDTH = 160;
+      const GAME_HEIGHT = 220;
+
+      const resizeGameLayout = () => {
+        const player = document.querySelector("pyxel-run");
+        const controls = document.querySelector(".touch-controls");
+        const hint = document.querySelector("p");
+        const main = document.querySelector("main");
+        const canvas = document.querySelector("canvas");
+
+        if (!player || !controls || !hint || !main) {
+          return false;
+        }
+
+        const bodyStyle = getComputedStyle(document.body);
+        const mainStyle = getComputedStyle(main);
+        const horizontalPadding =
+          parseFloat(bodyStyle.paddingLeft) + parseFloat(bodyStyle.paddingRight);
+        const verticalPadding =
+          parseFloat(bodyStyle.paddingTop) + parseFloat(bodyStyle.paddingBottom);
+        const gap = parseFloat(mainStyle.gap) || 0;
+        const controlsHeight = controls.getBoundingClientRect().height;
+        const hintHeight = hint.getBoundingClientRect().height;
+        const availableWidth = Math.min(560, window.innerWidth - horizontalPadding);
+        const availableHeight =
+          window.innerHeight - verticalPadding - controlsHeight - hintHeight - gap * 2 - 12;
+        const fittedWidth = Math.min(availableWidth, (availableHeight * GAME_WIDTH) / GAME_HEIGHT);
+        const targetWidth = Math.max(180, Math.min(availableWidth, Math.floor(fittedWidth)));
+
+        player.style.width = `${targetWidth}px`;
+        if (canvas) {
+          canvas.style.width = "100%";
+          canvas.style.height = "auto";
+        }
+
+        return true;
+      };
+
       const applyCanvasStyle = () => {
         const canvas = document.querySelector("canvas");
         if (!canvas) {
@@ -120,6 +159,7 @@
         canvas.style.display = "block";
         canvas.style.imageRendering = "pixelated";
         canvas.style.touchAction = "none";
+        resizeGameLayout();
         return true;
       };
 
@@ -131,6 +171,10 @@
         });
         observer.observe(document.body, { childList: true, subtree: true });
       }
+
+      window.addEventListener("resize", resizeGameLayout);
+      window.addEventListener("orientationchange", resizeGameLayout);
+      resizeGameLayout();
 
       const pressedKeys = new Map();
 
