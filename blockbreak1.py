@@ -5,9 +5,9 @@ import pyxel
 
 
 WIDTH = 160
-HEIGHT = 160
+HEIGHT = 220
 HUD_HEIGHT = 10
-CONTROL_AREA_HEIGHT = 26
+CONTROL_AREA_HEIGHT = 32
 PLAY_BOTTOM = HEIGHT - CONTROL_AREA_HEIGHT
 PADDLE_WIDTH = 26
 PADDLE_HEIGHT = 4
@@ -330,15 +330,16 @@ class App:
         pyxel.text(x + CONTROL_BUTTON_WIDTH // 2 - 2, CONTROL_BUTTON_TOP + 4, label, text_color)
 
     def draw_overlay(self, title: str, subtitle: str) -> None:
-        pyxel.rect(24, 42, 112, 34, 0)
-        pyxel.rectb(24, 42, 112, 34, 7)
+        overlay_y = HUD_HEIGHT + (PLAY_BOTTOM - HUD_HEIGHT) // 2 - 17
+        pyxel.rect(24, overlay_y, 112, 34, 0)
+        pyxel.rectb(24, overlay_y, 112, 34, 7)
         title_x = WIDTH // 2 - len(title) * 2
         subtitle_x = WIDTH // 2 - len(subtitle) * 2
-        pyxel.text(title_x, 50, title, 8)
-        pyxel.text(subtitle_x, 62, subtitle, 7)
+        pyxel.text(title_x, overlay_y + 8, title, 8)
+        pyxel.text(subtitle_x, overlay_y + 20, subtitle, 7)
         if self.state == STATE_TITLE:
-            pyxel.text(22, 84, "MOVE: BUTTONS OR DRAG", 6)
-            pyxel.text(32, 92, "START: TAP OR SPACE", 6)
+            pyxel.text(22, overlay_y + 42, "MOVE: BUTTONS OR DRAG", 6)
+            pyxel.text(32, overlay_y + 50, "START: TAP OR SPACE", 6)
 
 
 App()
