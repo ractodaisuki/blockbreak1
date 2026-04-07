@@ -150,12 +150,7 @@
         }
 
         .touch-controls {
-          position: fixed;
-          left: max(4px, env(safe-area-inset-left));
-          right: max(4px, env(safe-area-inset-right));
-          bottom: max(4px, env(safe-area-inset-bottom));
-          z-index: 10;
-          gap: 8px;
+          display: none;
         }
 
         .touch-button {
@@ -184,62 +179,57 @@
       const GAME_HEIGHT = 220;
 
       const resizeGameLayout = () => {
-        const player = document.querySelector("pyxel-run");
-        const controls = document.querySelector(".touch-controls");
-        const hint = document.querySelector("p");
-        const main = document.querySelector("main");
+        const screen = document.querySelector("#pyxel-screen");
         const canvas = document.querySelector("canvas");
 
-        if (!player || !controls || !hint || !main) {
+        if (!screen || !canvas) {
           return false;
         }
 
         const bodyStyle = getComputedStyle(document.body);
-        const mainStyle = getComputedStyle(main);
         const viewportWidth = window.visualViewport?.width ?? window.innerWidth;
         const viewportHeight = window.visualViewport?.height ?? window.innerHeight;
-        const mobileLayout = window.matchMedia("(max-width: 640px)").matches;
         const horizontalPadding =
           parseFloat(bodyStyle.paddingLeft) + parseFloat(bodyStyle.paddingRight);
         const verticalPadding =
           parseFloat(bodyStyle.paddingTop) + parseFloat(bodyStyle.paddingBottom);
-        const gap = parseFloat(mainStyle.gap) || 0;
-        const controlsHeight = controls.getBoundingClientRect().height;
-        const hintVisible = getComputedStyle(hint).display !== "none";
-        const hintHeight = hintVisible ? hint.getBoundingClientRect().height : 0;
-        const availableWidth = viewportWidth - horizontalPadding;
-        const availableHeight =
-          viewportHeight
-          - verticalPadding
-          - controlsHeight
-          - hintHeight
-          - gap * 2
-          - (mobileLayout ? 0 : 4);
-        const fittedWidth = Math.min(availableWidth, (availableHeight * GAME_WIDTH) / GAME_HEIGHT);
-        const targetWidth = mobileLayout
-          ? Math.max(180, Math.floor(availableWidth))
-          : Math.max(180, Math.min(availableWidth, Math.floor(fittedWidth)));
+        const availableWidth = Math.max(180, viewportWidth - horizontalPadding);
+        const availableHeight = Math.max(240, viewportHeight - verticalPadding);
+        let targetWidth = Math.floor(availableWidth);
+        let targetHeight = Math.floor((targetWidth * GAME_HEIGHT) / GAME_WIDTH);
 
-        player.style.width = `${targetWidth}px`;
-        if (canvas) {
-          canvas.style.width = "100%";
-          canvas.style.height = "auto";
+        if (targetHeight > availableHeight) {
+          targetHeight = Math.floor(availableHeight);
+          targetWidth = Math.floor((targetHeight * GAME_WIDTH) / GAME_HEIGHT);
         }
+
+        const offsetLeft = Math.max(0, Math.floor((viewportWidth - targetWidth) / 2));
+        const offsetTop = Math.max(0, Math.floor((viewportHeight - targetHeight) / 2));
+
+        screen.style.position = "fixed";
+        screen.style.left = `${offsetLeft}px`;
+        screen.style.top = `${offsetTop}px`;
+        screen.style.width = `${targetWidth}px`;
+        screen.style.height = `${targetHeight}px`;
+        screen.style.backgroundColor = "transparent";
+        screen.style.zIndex = "5";
+
+        canvas.style.width = "100%";
+        canvas.style.height = "100%";
+        canvas.style.display = "block";
+        canvas.style.imageRendering = "pixelated";
+        canvas.style.touchAction = "none";
 
         return true;
       };
 
       const applyCanvasStyle = () => {
+        const screen = document.querySelector("#pyxel-screen");
         const canvas = document.querySelector("canvas");
-        if (!canvas) {
+        if (!screen || !canvas) {
           return false;
         }
 
-        canvas.style.width = "100%";
-        canvas.style.height = "auto";
-        canvas.style.display = "block";
-        canvas.style.imageRendering = "pixelated";
-        canvas.style.touchAction = "none";
         resizeGameLayout();
         return true;
       };
