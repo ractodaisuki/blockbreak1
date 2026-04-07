@@ -23,14 +23,17 @@
       }
 
       body {
-        display: grid;
-        place-items: center;
+        min-height: 100svh;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
         padding:
           max(16px, env(safe-area-inset-top))
           max(16px, env(safe-area-inset-right))
-          max(16px, env(safe-area-inset-bottom))
+          max(96px, calc(env(safe-area-inset-bottom) + 96px))
           max(16px, env(safe-area-inset-left));
-        overflow: hidden;
+        overflow-x: hidden;
+        overflow-y: auto;
         background:
           radial-gradient(circle at top, #1a3b63 0%, #0a1422 50%, #02060b 100%);
         color: #e4efff;
@@ -42,6 +45,7 @@
         display: grid;
         gap: 12px;
         width: min(100%, 560px);
+        margin: auto 0;
         justify-items: center;
       }
 
@@ -69,6 +73,8 @@
         grid-template-columns: repeat(2, minmax(0, 1fr));
         gap: 12px;
         width: min(100%, 560px);
+        position: sticky;
+        bottom: max(16px, env(safe-area-inset-bottom));
       }
 
       .touch-button {
