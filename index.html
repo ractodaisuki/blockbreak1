@@ -216,7 +216,9 @@
           - gap * 2
           - (mobileLayout ? 0 : 4);
         const fittedWidth = Math.min(availableWidth, (availableHeight * GAME_WIDTH) / GAME_HEIGHT);
-        const targetWidth = Math.max(180, Math.min(availableWidth, Math.floor(fittedWidth)));
+        const targetWidth = mobileLayout
+          ? Math.max(180, Math.floor(availableWidth))
+          : Math.max(180, Math.min(availableWidth, Math.floor(fittedWidth)));
 
         player.style.width = `${targetWidth}px`;
         if (canvas) {
