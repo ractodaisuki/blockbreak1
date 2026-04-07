@@ -2,6 +2,9 @@
 
 Pyxel で作ったシンプルなブロック崩しです。
 
+GitHub Pages:
+https://ractodaisuki.github.io/blockbreak1/
+
 `index.html` をブラウザで開くと `blockbreak1.py` が読み込まれます。
 
 操作:
