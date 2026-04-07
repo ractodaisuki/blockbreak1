@@ -63,12 +63,43 @@
         line-height: 1.5;
         color: rgba(228, 239, 255, 0.82);
       }
+
+      .touch-controls {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 12px;
+        width: min(100%, 560px);
+      }
+
+      .touch-button {
+        appearance: none;
+        border: 0;
+        border-radius: 16px;
+        padding: 16px 0;
+        background: linear-gradient(180deg, #7cc7ff 0%, #3e88c7 100%);
+        color: #04111d;
+        font: 700 24px/1 "Trebuchet MS", "Hiragino Sans", sans-serif;
+        box-shadow:
+          inset 0 1px 0 rgba(255, 255, 255, 0.35),
+          0 10px 24px rgba(0, 0, 0, 0.28);
+        touch-action: manipulation;
+      }
+
+      .touch-button:active,
+      .touch-button.is-active {
+        transform: translateY(1px);
+        background: linear-gradient(180deg, #ffd36a 0%, #f4a317 100%);
+      }
     </style>
     <script src="https://cdn.jsdelivr.net/gh/kitao/pyxel/wasm/pyxel.js"></script>
   </head>
   <body>
     <main>
       <pyxel-run name="blockbreak1.py"></pyxel-run>
+      <div class="touch-controls" aria-label="Touch controls">
+        <button class="touch-button" data-key="ArrowLeft" type="button">LEFT</button>
+        <button class="touch-button" data-key="ArrowRight" type="button">RIGHT</button>
+      </div>
       <p>スマホは画面下の左右ボタンかドラッグで移動、タップで開始・リトライできます。</p>
     </main>
     <script>
@@ -94,6 +125,57 @@
         });
         observer.observe(document.body, { childList: true, subtree: true });
       }
+
+      const pressedKeys = new Map();
+
+      const emitKey = (type, key) => {
+        const event = new KeyboardEvent(type, {
+          key,
+          code: key,
+          bubbles: true,
+          cancelable: true,
+        });
+        window.dispatchEvent(event);
+        document.dispatchEvent(event);
+      };
+
+      const pressKey = (key, button) => {
+        if (pressedKeys.has(key)) {
+          return;
+        }
+        pressedKeys.set(key, button);
+        button.classList.add("is-active");
+        emitKey("keydown", key);
+      };
+
+      const releaseKey = (key) => {
+        const button = pressedKeys.get(key);
+        if (!button) {
+          return;
+        }
+        pressedKeys.delete(key);
+        button.classList.remove("is-active");
+        emitKey("keyup", key);
+      };
+
+      document.querySelectorAll(".touch-button").forEach((button) => {
+        const key = button.dataset.key;
+
+        const start = (event) => {
+          event.preventDefault();
+          pressKey(key, button);
+        };
+
+        const end = (event) => {
+          event.preventDefault();
+          releaseKey(key);
+        };
+
+        button.addEventListener("pointerdown", start);
+        button.addEventListener("pointerup", end);
+        button.addEventListener("pointercancel", end);
+        button.addEventListener("pointerleave", () => releaseKey(key));
+      });
     </script>
   </body>
 </html>
