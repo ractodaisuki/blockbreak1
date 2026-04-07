@@ -28,10 +28,10 @@
         flex-direction: column;
         align-items: center;
         padding:
-          max(8px, env(safe-area-inset-top))
-          max(8px, env(safe-area-inset-right))
-          max(8px, env(safe-area-inset-bottom))
-          max(8px, env(safe-area-inset-left));
+          max(4px, env(safe-area-inset-top))
+          max(4px, env(safe-area-inset-right))
+          max(4px, env(safe-area-inset-bottom))
+          max(4px, env(safe-area-inset-left));
         overflow-x: hidden;
         overflow-y: auto;
         background:
@@ -45,7 +45,6 @@
         display: grid;
         gap: 8px;
         width: 100%;
-        max-width: 560px;
         min-height: calc(100dvh - env(safe-area-inset-top) - env(safe-area-inset-bottom) - 16px);
         align-content: center;
         justify-items: center;
@@ -54,7 +53,6 @@
       pyxel-run {
         display: block;
         width: 100%;
-        max-width: 560px;
         line-height: 0;
         border: 2px solid rgba(228, 239, 255, 0.18);
         border-radius: 18px;
@@ -76,7 +74,6 @@
         grid-template-columns: repeat(2, minmax(0, 1fr));
         gap: 12px;
         width: 100%;
-        max-width: 560px;
       }
 
       .touch-button {
@@ -132,6 +129,44 @@
           display: none;
         }
       }
+
+      @media (max-width: 640px) {
+        body {
+          padding:
+            max(4px, env(safe-area-inset-top))
+            max(4px, env(safe-area-inset-right))
+            max(4px, env(safe-area-inset-bottom))
+            max(4px, env(safe-area-inset-left));
+        }
+
+        main {
+          gap: 4px;
+          min-height: calc(100dvh - env(safe-area-inset-top) - env(safe-area-inset-bottom) - 8px);
+          padding-bottom: calc(env(safe-area-inset-bottom) + 64px);
+        }
+
+        pyxel-run {
+          border-radius: 14px;
+        }
+
+        .touch-controls {
+          position: fixed;
+          left: max(4px, env(safe-area-inset-left));
+          right: max(4px, env(safe-area-inset-right));
+          bottom: max(4px, env(safe-area-inset-bottom));
+          z-index: 10;
+          gap: 8px;
+        }
+
+        .touch-button {
+          padding: 10px 0;
+          font-size: 18px;
+        }
+
+        p {
+          display: none;
+        }
+      }
     </style>
     <script src="https://cdn.jsdelivr.net/gh/kitao/pyxel/wasm/pyxel.js"></script>
   </head>
@@ -163,6 +198,7 @@
         const mainStyle = getComputedStyle(main);
         const viewportWidth = window.visualViewport?.width ?? window.innerWidth;
         const viewportHeight = window.visualViewport?.height ?? window.innerHeight;
+        const mobileLayout = window.matchMedia("(max-width: 640px)").matches;
         const horizontalPadding =
           parseFloat(bodyStyle.paddingLeft) + parseFloat(bodyStyle.paddingRight);
         const verticalPadding =
@@ -171,9 +207,14 @@
         const controlsHeight = controls.getBoundingClientRect().height;
         const hintVisible = getComputedStyle(hint).display !== "none";
         const hintHeight = hintVisible ? hint.getBoundingClientRect().height : 0;
-        const availableWidth = Math.min(560, viewportWidth - horizontalPadding);
+        const availableWidth = viewportWidth - horizontalPadding;
         const availableHeight =
-          viewportHeight - verticalPadding - controlsHeight - hintHeight - gap * 2 - 4;
+          viewportHeight
+          - verticalPadding
+          - controlsHeight
+          - hintHeight
+          - gap * 2
+          - (mobileLayout ? 0 : 4);
         const fittedWidth = Math.min(availableWidth, (availableHeight * GAME_WIDTH) / GAME_HEIGHT);
         const targetWidth = Math.max(180, Math.min(availableWidth, Math.floor(fittedWidth)));
 
