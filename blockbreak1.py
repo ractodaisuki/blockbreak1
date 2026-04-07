@@ -59,6 +59,7 @@ class Brick:
 class App:
     def __init__(self) -> None:
         pyxel.init(WIDTH, HEIGHT, title="Block Breaker", fps=60)
+        pyxel.mouse(True)
         self.stars = [
             [pyxel.rndi(0, WIDTH - 1), pyxel.rndi(0, HEIGHT - 1), pyxel.rndi(1, 2)]
             for _ in range(24)
@@ -131,7 +132,11 @@ class App:
         self.update_ball()
 
     def start_pressed(self) -> bool:
-        return pyxel.btnp(pyxel.KEY_SPACE) or pyxel.btnp(pyxel.GAMEPAD1_BUTTON_A)
+        return (
+            pyxel.btnp(pyxel.KEY_SPACE)
+            or pyxel.btnp(pyxel.GAMEPAD1_BUTTON_A)
+            or pyxel.btnp(pyxel.MOUSE_BUTTON_LEFT)
+        )
 
     def update_stars(self) -> None:
         for star in self.stars:
@@ -142,12 +147,16 @@ class App:
                 star[2] = pyxel.rndi(1, 2)
 
     def update_paddle(self) -> None:
+        pointer_down = pyxel.btn(pyxel.MOUSE_BUTTON_LEFT)
+        pointer_in_bounds = 0 <= pyxel.mouse_x < WIDTH and 10 <= pyxel.mouse_y < HEIGHT
         move_left = pyxel.btn(pyxel.KEY_LEFT) or pyxel.btn(pyxel.KEY_A)
         move_right = pyxel.btn(pyxel.KEY_RIGHT) or pyxel.btn(pyxel.KEY_D)
 
-        if move_left:
+        if pointer_down and pointer_in_bounds:
+            self.paddle.x = pyxel.mouse_x - self.paddle.width / 2
+        elif move_left:
             self.paddle.x -= self.paddle.speed
-        if move_right:
+        elif move_right:
             self.paddle.x += self.paddle.speed
 
         self.paddle.x = max(4, min(self.paddle.x, WIDTH - self.paddle.width - 4))
@@ -283,8 +292,8 @@ class App:
         pyxel.text(title_x, 50, title, 8)
         pyxel.text(subtitle_x, 62, subtitle, 7)
         if self.state == STATE_TITLE:
-            pyxel.text(34, 84, "MOVE: ARROWS OR A/D", 6)
-            pyxel.text(48, 92, "BREAK ALL BRICKS", 6)
+            pyxel.text(34, 84, "MOVE: DRAG OR A/D", 6)
+            pyxel.text(32, 92, "START: TAP OR SPACE", 6)
 
 
 App()

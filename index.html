@@ -1,2 +1,99 @@
-<script src="https://cdn.jsdelivr.net/gh/kitao/pyxel/wasm/pyxel.js"></script>
-<pyxel-run name="blockbreak1.py"></pyxel-run>
+<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="utf-8">
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no"
+    >
+    <title>blockbreak1</title>
+    <style>
+      :root {
+        color-scheme: dark;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      html,
+      body {
+        margin: 0;
+        min-height: 100%;
+      }
+
+      body {
+        display: grid;
+        place-items: center;
+        padding:
+          max(16px, env(safe-area-inset-top))
+          max(16px, env(safe-area-inset-right))
+          max(16px, env(safe-area-inset-bottom))
+          max(16px, env(safe-area-inset-left));
+        overflow: hidden;
+        background:
+          radial-gradient(circle at top, #1a3b63 0%, #0a1422 50%, #02060b 100%);
+        color: #e4efff;
+        font-family: "Trebuchet MS", "Hiragino Sans", sans-serif;
+        touch-action: none;
+      }
+
+      main {
+        display: grid;
+        gap: 12px;
+        width: min(100%, 560px);
+        justify-items: center;
+      }
+
+      pyxel-run {
+        display: block;
+        width: min(100%, 560px);
+        line-height: 0;
+        border: 2px solid rgba(228, 239, 255, 0.18);
+        border-radius: 18px;
+        overflow: hidden;
+        box-shadow: 0 18px 50px rgba(0, 0, 0, 0.45);
+        touch-action: none;
+      }
+
+      p {
+        margin: 0;
+        text-align: center;
+        font-size: 14px;
+        line-height: 1.5;
+        color: rgba(228, 239, 255, 0.82);
+      }
+    </style>
+    <script src="https://cdn.jsdelivr.net/gh/kitao/pyxel/wasm/pyxel.js"></script>
+  </head>
+  <body>
+    <main>
+      <pyxel-run name="blockbreak1.py"></pyxel-run>
+      <p>スマホはドラッグで移動、タップで開始・リトライできます。</p>
+    </main>
+    <script>
+      const applyCanvasStyle = () => {
+        const canvas = document.querySelector("canvas");
+        if (!canvas) {
+          return false;
+        }
+
+        canvas.style.width = "100%";
+        canvas.style.height = "auto";
+        canvas.style.display = "block";
+        canvas.style.imageRendering = "pixelated";
+        canvas.style.touchAction = "none";
+        return true;
+      };
+
+      if (!applyCanvasStyle()) {
+        const observer = new MutationObserver(() => {
+          if (applyCanvasStyle()) {
+            observer.disconnect();
+          }
+        });
+        observer.observe(document.body, { childList: true, subtree: true });
+      }
+    </script>
+  </body>
+</html>
